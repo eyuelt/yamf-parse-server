@@ -22,40 +22,6 @@ function removePaired(user, callback) {
   });
 }
 
-
-function getACL(user, partner, isAdd) {
-  var acl = new Parse.ACL();
-  acl.setReadAccess(user, true);
-  acl.setWriteAccess(user, true);
-  if (isAdd && partner) {
-    acl.setReadAccess(partner, true);
-  }
-  return acl;
-}
-
-function manageResponseACL(user, partner, isAdd, callback) {
-  var userObject = getQueryUserObject(user.id);
-  var query = new Parse.Query('TestResponse');
-  query.equalTo('user', userObject);
-  query.each(function(response) {
-    response.setACL(getACL(user, partner, isAdd));
-    response.save(null, {useMasterKey: true});
-  }, {useMasterKey: true}).then(function() {
-    console.log('Done updating ACL');
-    callback();
-  }, function(error) {
-    console.error("Got an error " + error.code + " : " + error.message);
-    callback();
-  });
-}
-
-Parse.Cloud.beforeSave('TestResponse', function(request, response) {
-  var currentUser = Parse.User.current();
-  request.object.setACL(getACL(currentUser, currentUser.get('partner'), true));
-  response.success();
-});
-
-
 Parse.Cloud.beforeSave(Parse.User, function(request, response) {
   if (request.object.get('partner')) {
     var query = new Parse.Query(Parse.User);
