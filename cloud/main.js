@@ -7,15 +7,13 @@ function getQueryUserObject(user_id) {
 
 function removePaired(user, callback) {
   var userObject = getQueryUserObject(user.id);
-
   var query = new Parse.Query(Parse.User);
-
   query.equalTo('partner', userObject);
   query.each(function(partner) {
     console.log('Found user to update');
     partner.set('isPaired', false);
-    partner.save();
-  }).then(function() {
+    partner.save(null, {useMasterKey: true});
+  }, {useMasterKey: true}).then(function() {
     console.log('Done updating users');
     callback();
   }, function(error) {
@@ -23,6 +21,7 @@ function removePaired(user, callback) {
     callback();
   });
 }
+
 
 function getACL(user, partner, isAdd) {
   var acl = new Parse.ACL();
@@ -36,13 +35,12 @@ function getACL(user, partner, isAdd) {
 
 function manageResponseACL(user, partner, isAdd, callback) {
   var userObject = getQueryUserObject(user.id);
-
   var query = new Parse.Query('TestResponse');
   query.equalTo('user', userObject);
   query.each(function(response) {
     response.setACL(getACL(user, partner, isAdd));
-    response.save();
-  }).then(function() {
+    response.save(null, {useMasterKey: true});
+  }, {useMasterKey: true}).then(function() {
     console.log('Done updating ACL');
     callback();
   }, function(error) {
@@ -57,12 +55,10 @@ Parse.Cloud.beforeSave('TestResponse', function(request, response) {
   response.success();
 });
 
-Parse.Cloud.beforeSave(Parse.User, function(request, response) {
-  Parse.Cloud.useMasterKey();
 
+Parse.Cloud.beforeSave(Parse.User, function(request, response) {
   if (request.object.get('partner')) {
     var query = new Parse.Query(Parse.User);
-
     console.log('User ' + request.object.get('email') + ' came in with partner ' + request.object.get('partner').id);
     query.get(request.object.get('partner').id, {
       success: function(partner) {
@@ -71,7 +67,7 @@ Parse.Cloud.beforeSave(Parse.User, function(request, response) {
             console.log('Pairing ' + request.object.get('email') + ' with ' + partner.get('email'));
             request.object.set('isPaired', true);
             partner.set('isPaired', true);
-            partner.save();
+            partner.save(null, {useMasterKey: true});
 
             manageResponseACL(request.object, partner, true, response.success);
           } else {
@@ -92,7 +88,8 @@ Parse.Cloud.beforeSave(Parse.User, function(request, response) {
       error: function(error) {
         console.error("Got an error " + error.code + " : " + error.message);
         response.success();
-      }
+      },
+      useMasterKey: true,
     });
   } else if (request.object.get('isPaired')) {
     request.object.set('isPaired', false);
