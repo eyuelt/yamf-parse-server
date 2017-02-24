@@ -3,6 +3,7 @@
 
 var express = require('express');
 var ParseServer = require('parse-server').ParseServer;
+var S3Adapter = require('parse-server').S3Adapter;
 var path = require('path');
 
 var databaseUri = process.env.DATABASE_URI || process.env.MONGODB_URI;
@@ -34,7 +35,14 @@ var api = new ParseServer({
       domain: process.env.MAILGUN_DOMAIN,
       apiKey: process.env.MAILGUN_API_KEY,
     }
-  }
+  },
+
+  filesAdapter: new S3Adapter(
+    process.env.S3_ACCESS_KEY,
+    process.env.S3_SECRET_KEY,
+    process.env.S3_BUCKET,
+    {directAccess: true}
+  )
 });
 
 
