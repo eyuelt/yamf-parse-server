@@ -34,8 +34,7 @@ Parse.Cloud.beforeSave(Parse.User, function(request, response) {
             request.object.set('isPaired', true);
             partner.set('isPaired', true);
             partner.save(null, {useMasterKey: true});
-
-            manageResponseACL(request.object, partner, true, response.success);
+            response.success();
           } else {
             console.log('Users are already paired.');
             response.success();
@@ -44,7 +43,7 @@ Parse.Cloud.beforeSave(Parse.User, function(request, response) {
           console.log('User ' + request.object.get('email') + ' isPaired but has requested to partner with someone else.');
           request.object.set('isPaired', false);
           removePaired(request.object, function() {
-            manageResponseACL(request.object, undefined, false, response.success);
+            response.success();
           });
         } else {
           console.log('Partners are not the same. Do nothing');
@@ -60,7 +59,7 @@ Parse.Cloud.beforeSave(Parse.User, function(request, response) {
   } else if (request.object.get('isPaired')) {
     request.object.set('isPaired', false);
     removePaired(request.object, function() {
-      manageResponseACL(request.object, undefined, false, response.success);
+      response.success();
     });
   } else {
     console.log('User has no partner and is not paired.');
